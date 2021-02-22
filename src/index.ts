@@ -28,18 +28,48 @@ interface FormatOptions<T>{
   maxDepth: number;
 }
 
-
+/**
+ * any not (null | undefined)
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface nonvoid{}
 export interface Stringfy{
   toString(): string;
 }
+
+export function getDeepKey(key:string, obj: nonvoid): any {
+  const keys = key.toString().split(".").reverse();
+  const firstKey = keys.pop();
+  if (firstKey !== undefined) {
+    if (Object.keys(obj).includes(firstKey)) {
+      let element = obj[firstKey];
+      while (keys.length !== 0) {
+        const k = keys.pop();
+        if (k !== undefined) {
+          if (Object.keys(element).includes(k)) {
+            element = element[k];
+          } else {
+            return undefined;
+          }
+        } else {
+          return undefined;
+        }
+      }
+      return element;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Context-based formatter
- * @param text Texto to format
- * @param context Context from text
- * @param optss Options
- * @returns {string}
+ * @param {string} text Text to format
+ * @param {nonvoid} context Context from text
+ * @param {FormatOptionsParam<T>} optss Options
+ * @throws {Error("Close delimiter not found")}
+ * @returns {string} Return text formated.
  */
-export function format<T extends Stringfy>(text: string, context: T, optss?: FormatOptionsParam<T>): string {
+export function format<T extends nonvoid>(text: string, context: T, optss?: FormatOptionsParam<T>): string {
   const options: FormatOptions<T> = {
     cancelers: ["\\"],
     delimiters: [
@@ -50,12 +80,33 @@ export function format<T extends Stringfy>(text: string, context: T, optss?: For
     ],
     process: (context: T) => context,
     compile: (segment, context, opts) => {
-      if (Object.keys(context).includes(segment.toString())) {
-        return context[segment.toString()];
+      const deep = getDeepKey(segment.toString(), context);
+      if (deep !== undefined) {
+        return deep;
       } else {
         console.warn(`${segment} não foi encontrado no contexto atual`);
-        return segment;
+        return segment.toString();
       }
+      // return (deep !== undefined) ? deep : segment.toString();
+      // if (Object.keys(context).includes(segment.toString())) {
+      //   const keys = segment.toString().split(".").reverse();
+      //   const firstKey = keys.pop();
+      //   if (firstKey !== undefined) {
+      //     let element = context[firstKey];
+      //     while (keys.length !== 0) {
+      //       element = element[keys.pop()];
+      //     }
+      //     return element;
+      //   }
+      //   // if (keys.length === 1) {
+      //   //   return context[keys[0]];
+      //   // } else if (keys.length > 1) {
+          
+      //   // }
+      // } else {
+      //   console.warn(`${segment} não foi encontrado no contexto atual`);
+      //   return segment;
+      // }
     },
     make: (segment, context: T | any = {}) => {
       if (typeof segment === "function") {
@@ -139,7 +190,7 @@ export function format<T extends Stringfy>(text: string, context: T, optss?: For
           }
         }
         if (eof) {
-          throw new Error("EOF");
+          throw new Error("Close delimiter not found.");
         }
         if (inner === "" && options.empty) {
           pivot += i - 1;
@@ -188,3 +239,4 @@ export function format<T extends Stringfy>(text: string, context: T, optss?: For
   }
   return result;
 }
+export default format;

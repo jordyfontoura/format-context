@@ -1,4 +1,4 @@
-import {format} from "../src/index";
+import {format, getDeepKey} from "../src/index";
 
 describe("Formar-Context", () => {
   it("Params", () => {
@@ -62,5 +62,17 @@ describe("Formar-Context", () => {
   it("Empty", () => {
     expect(format("Olá {}!", ["Jack"], { empty: false })).toBe("Olá Jack!");
     expect(format("Olá {}!", ["Jack"], { empty: true })).toBe("Olá !");
+  });
+  it("KeyMap", () => {
+    expect(format("nome: {user.nome}", { user: { nome: "jordy" } })).toBe("nome: jordy");
+    expect(format("superdeep: {a.b.c.d.e.f}", {a: {b: {c: {d: {e: {f: "OK"}}}}}})).toBe("superdeep: OK");
+    expect(format("superdeep: {a.c}", {a: {b: {c: {d: {e: {f: "OK"}}}}}})).toBe("superdeep: a.c");
+  });
+});
+describe("DeepKey", () => {
+  it("run", () => {
+    expect(getDeepKey("user.nome", { user: { nome: "jordy" } })).toBe("jordy");
+    expect(getDeepKey("user.idade", { user: { nome: "jordy" } })).toBe(undefined);
+    expect(getDeepKey("user", { user: { nome: "jordy" } })).toEqual({nome: "jordy"});
   });
 });

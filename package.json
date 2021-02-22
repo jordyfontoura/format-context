@@ -1,6 +1,6 @@
 {
   "name": "format-context",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Text format based on context",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "yarn run build",
-    "publish": "npm publish",
+    "publish": "npm test && npm build && npm prepare && npm publish",
     "test": "jest"
   },
   "author": "https://github.com/jordyfontoura",
@@ -27,5 +27,12 @@
     "ts-jest": "^26.5.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.5"
-  }
+  },
+  "keywords": [
+    "text-format", "string-format", 
+    "format", "context-format", 
+    "format-context", "formatting", 
+    "text", "string"
+  ],
+  "displayName": "Context Format"
 }
