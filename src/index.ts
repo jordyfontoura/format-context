@@ -5,9 +5,9 @@ interface Delimiter{
 interface FormatOptionsParam<T>{
   cancelers?: string[]
   delimiters?: Delimiter[];
-  process?: (context: T) => object;
-  compile?: (segment: string, context: T|object, options?: FormatOptions<T>) => string;
-  make?: (segment: string, context?: T|object)=>string;
+  process?: (context: T) => Stringfy;
+  compile?: (segment: Stringfy, context: T|Stringfy, options?: FormatOptions<T>) => Stringfy;
+  make?: (segment: Stringfy, context?: T|Stringfy)=>Stringfy;
   // if true empty args = "", else empty = context[n-ésimo encontrado]
   empty?: boolean;
   recursive?: boolean;
@@ -18,9 +18,9 @@ interface FormatOptionsParam<T>{
 interface FormatOptions<T>{
   cancelers: string[]
   delimiters: Delimiter[];
-  process: (context: T) => object;
-  compile: (segment: string, context: T|object, options: FormatOptions<T>) => string;
-  make: (segment: string|((context: T|object)=>string), context: T|object)=>string;
+  process: (context: T) => Stringfy;
+  compile: (segment: Stringfy, context: T|Stringfy, options: FormatOptions<T>) => Stringfy;
+  make: (segment: Stringfy|((context: T|Stringfy)=>Stringfy), context: T|Stringfy)=>Stringfy;
   // if true empty args = "", else empty = context[n-ésimo encontrado]
   empty: boolean;
   recursive: boolean;
@@ -40,30 +40,34 @@ format("Seu nome é $[nome] e sua idade é $[idade]", {nome: "jordy", idade: 22}
 
 */
 
-function format<T extends object>(text: string, context: T, optss?: FormatOptionsParam<T>): string {
+interface Stringfy{
+  toString(): string;
+}
+
+export function format<T extends Stringfy>(text: string, context: T, optss?: FormatOptionsParam<T>): string {
   const options: FormatOptions<T> = {
-    cancelers: ['\\'],
+    cancelers: ["\\"],
     delimiters: [
       {
-        start: '{',
-        end: '}',
+        start: "{",
+        end: "}",
       }
     ],
-    process: (context: T)=>context,
+    process: (context: T) => context,
     compile: (segment, context, opts) => {
-      if (Object.keys(context).includes(segment)) {
-        return context[segment];
+      if (Object.keys(context).includes(segment.toString())) {
+        return context[segment.toString()];
       } else {
         console.warn(`${segment} não foi encontrado no contexto atual`);
-        return "|-?-|"
+        return segment;
       }
     },
-    make: (segment, context: T | object = {}) => {
-      if (typeof segment === 'function') {
+    make: (segment, context: T | any = {}) => {
+      if (typeof segment === "function") {
         if (options.enableFunctionSegment) {
           return segment(context);
         } else {
-          return segment.toString();
+          return "[function]";
         }
       }
       return segment;
@@ -73,7 +77,7 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
     recursive: false,
     maxDepth: 6,
     ...optss
-  }
+  };
   function m(p: number, t: string, ...ops: string[]): string | undefined {
     const max = Math.max(...ops.map(o => o.length));
     ops = ops.sort((a, b) =>b.length - a.length);
@@ -103,7 +107,7 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
       cancel = true;
       continue;
     } else{
-      const startDelimiter = m(pivot, text, ...options.delimiters.map(delimiter => delimiter.start))
+      const startDelimiter = m(pivot, text, ...options.delimiters.map(delimiter => delimiter.start));
       if (startDelimiter !== undefined) {
         
         if (cancel) {
@@ -118,7 +122,7 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
         const textSegment = text.slice(pivot);
         let eof = true;
         for (i = 0; i < textSegment.length; i++) {
-          const endDelimiter = m(i, textSegment, ...options.delimiters.map(delimiter => delimiter.end))
+          const endDelimiter = m(i, textSegment, ...options.delimiters.map(delimiter => delimiter.end));
           const canceler = m(pivot, text, ...options.cancelers);
           if (canceler !== undefined) {
             i += canceler.length - 1;
@@ -151,7 +155,7 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
             let newCompiled = compiled;
             let n = options.maxDepth; // MAX RECURSION
             while (n--) {
-              newCompiled = format(newCompiled, context, { ...optss, recursive: false });
+              newCompiled = format(newCompiled.toString(), context, { ...optss, recursive: false });
               if (newCompiled === compiled) {
                 break;
               }
@@ -173,7 +177,7 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
           let newCompiled = compiled;
           let n = options.maxDepth; // MAX RECURSION
           while (n--) {
-            newCompiled = format(newCompiled, context, { ...optss, recursive: false });
+            newCompiled = format(newCompiled.toString(), context, { ...optss, recursive: false });
             if (newCompiled === compiled) {
               break;
             }
@@ -190,44 +194,44 @@ function format<T extends object>(text: string, context: T, optss?: FormatOption
   return result;
 }
 
-function test() {
-  let resultado: string = format("seu nome\\\\ ", {});
-  console.log("resultado:", resultado);
-  resultado = format("seu.nome.{nome}.", { nome: 'Jordy{idade}', idade: 22 }, { recursive: true });
-  resultado = format("seu.nome.|{nome}|.", { nome: '<{nome}[Jordy]{nome}>', idade: 22 }, { recursive: true, maxDepth: 1 });
-  console.log("resultado:", resultado);
-  resultado = format("seu.nome.{nome}", { genero: 0, f: { nome: "Clari" }, m: { nome: "Jordy" } }, {
-    process: (context) => context.genero === 0 ? context.f : context.m
-  });
-  console.log("resultado:", resultado);
-  resultado = format("seu.nome.{nome}", { genero: 1, f: { nome: "Clari" }, m: { nome: "Jordy" } }, {
-    process: (context) => context.genero === 0 ? context.f : context.m
-  });
-  console.log("resultado:", resultado);
-  resultado = format("Olá {s}!", { genero: 2, e: { s: 'estranho' }, f: { s: 'garot{letra}', letra: "a" }, m: { s: 'garot{letra}', letra: "o" } }, {
-    process: (context) => context.genero === 0 ? context.f : (context.genero === 1 ? context.m : context.e),
-    recursive: true
-  });
-  console.log("resultado:", resultado);
+// function testa() {
+//   let resultado: string = format("seu nome\\\\ ", {});
+//   console.log("resultado:", resultado);
+//   resultado = format("seu.nome.{nome}.", { nome: 'Jordy{idade}', idade: 22 }, { recursive: true });
+//   resultado = format("seu.nome.|{nome}|.", { nome: '<{nome}[Jordy]{nome}>', idade: 22 }, { recursive: true, maxDepth: 1 });
+//   console.log("resultado:", resultado);
+//   resultado = format("seu.nome.{nome}", { genero: 0, f: { nome: "Clari" }, m: { nome: "Jordy" } }, {
+//     process: (context) => context.genero === 0 ? context.f : context.m
+//   });
+//   console.log("resultado:", resultado);
+//   resultado = format("seu.nome.{nome}", { genero: 1, f: { nome: "Clari" }, m: { nome: "Jordy" } }, {
+//     process: (context) => context.genero === 0 ? context.f : context.m
+//   });
+//   console.log("resultado:", resultado);
+//   resultado = format("Olá {s}!", { genero: 2, e: { s: 'estranho' }, f: { s: 'garot{letra}', letra: "a" }, m: { s: 'garot{letra}', letra: "o" } }, {
+//     process: (context) => context.genero === 0 ? context.f : (context.genero === 1 ? context.m : context.e),
+//     recursive: true
+//   });
+//   console.log("resultado:", resultado);
 
-  const teste = "Teste1";
-  resultado = format("Olá {nome}!", { nome: "teste" }, {
-    make: (txt) => teste
-  });
-  console.log("resultado:", resultado);
+//   const teste = "Teste1";
+//   resultado = format("Olá {nome}!", { nome: "teste" }, {
+//     make: (txt) => teste
+//   });
+//   console.log("resultado:", resultado);
 
-  resultado = format("{1}{2}{0}", [0, 1, 2]);
-  console.log("resultado:", resultado);
+//   resultado = format("{1}{2}{0}", [0, 1, 2]);
+//   console.log("resultado:", resultado);
   
-  resultado = format("{nome}:{}{}{}", {...[1, 2, 3, 4], nome: "jordy"});
-  console.log("resultado:", resultado);
+//   resultado = format("{nome}:{}{}{}", {...[1, 2, 3, 4], nome: "jordy"});
+//   console.log("resultado:", resultado);
 
-  resultado = format("Olá {apelido}!", {genero: 'masculino', masculino: {apelido: 'garoto'}, feminino: {apelido: 'garota'}}, {
-    process: (context)=>context.genero === 'masculino'? context.masculino : context.feminino 
-  })
-  console.log("resultado:", resultado);
+//   resultado = format("Olá {apelido}!", {genero: 'masculino', masculino: {apelido: 'garoto'}, feminino: {apelido: 'garota'}}, {
+//     process: (context)=>context.genero === 'masculino'? context.masculino : context.feminino 
+//   })
+//   console.log("resultado:", resultado);
 
-  resultado = format("Olá {}!", ["Jordy"], { empty: true });
-  console.log("resultado:", resultado);
-}
-test()
+//   resultado = format("Olá {}!", ["Jordy"], { empty: true });
+//   console.log("resultado:", resultado);
+// }
+// testa()

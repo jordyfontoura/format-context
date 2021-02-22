@@ -22,7 +22,7 @@ format("Olá {nome}!", {nome: "Jack {sobrenome}", sobrenome: "Sparrow"}, {recurs
 ```
 Warning:
 ```javascript
-format("Olá {nome}!", {nome: "Jack {nome}"}, {recursive: true, maxDepth: 2}) -> "Olá Jack Jack Jack!"
+format("Olá {nome}!", {nome: "Jack {nome}"}, {recursive: true, maxDepth: 2}) -> "Olá Jack Jack Jack {nome}!"
 ```
 maxDepth=Infinity will cause infinity loop
 
@@ -40,12 +40,12 @@ format("Olá {}!", ["Jack"], {empty: true}) -> "Olá !"
 enableFunctionSegment: false
 ```javascript
 let nome = "Jack";
-format("Olá {}!", {nome: (context)=>nome}, {enableFunctionSegment: false}) -> "Olá [function]!"
+format("Olá {nome}!", {nome: (context)=>nome}, {enableFunctionSegment: false}) -> "Olá [function]!"
 ```
 nableFunctionSegment: true
 ```javascript
 let nome = "Jack";
-format("Olá {}!", {nome: (context)=>nome}, {enableFunctionSegment: true}) -> "Olá Jack!"
+format("Olá {nome}!", {nome: (context)=>nome}, {enableFunctionSegment: true}) -> "Olá Jack!"
 ```
 
 ### Process
@@ -60,7 +60,7 @@ format("Olá {apelido}!", {genero: 'masculino', masculino: {apelido: 'garoto'}, 
 Função usada para "compilar" o segmento encontrado.
 Exemplo:
 ```javascript
-format("Olá {1} {17}!", {
+format("Olá {1} {17}!", {}, {
   compile: (segment)=>parseInt(segment) + 1
 }) -> "Olá 2 18!"
 ```
@@ -107,6 +107,6 @@ format("Olá {0}! Você tem {} anos!", ["Jack", 22]) -> "Olá Jack! Você tem Ja
 format("Olá {}! Você tem {1} anos!", ["Jack", 22]) -> "Olá Jack! Você tem 22 anos!"
 
 format("Olá {nome}! Você tem {} anos!", {0:22, nome: "Jack"}) -> "Olá Jack! Você tem 22 anos!"
-format("Olá {} {}! Você tem {idade} anos!", {["Jack", "Sparrow"], idade: "Jack"}) -> "Olá Jack Sparrow! Você tem 22 anos!"
+format("Olá {} {}! Você tem {idade} anos!", {...["Jack", "Sparrow"], idade: "Jack"}) -> "Olá Jack Sparrow! Você tem 22 anos!"
 
 ```
