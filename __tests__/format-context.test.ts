@@ -1,7 +1,7 @@
 import {format} from "../src/index";
 
 describe("Formar-Context", () => {
-  it("Deve substituir os parametros", () => {
+  it("Params", () => {
     expect(format("Olá {}!", ["Jack"])).toBe("Olá Jack!");
     expect(format("{}", ["Jack"])).toBe("Jack");
     expect(format("\\{{}}", ["Jack"])).toBe("{Jack}");
@@ -34,14 +34,14 @@ describe("Formar-Context", () => {
   });
   it("Compile", () => {
     expect(format("Olá {1} {17}!", {}, {
-      compile: (segment) => (parseInt(segment) + 1).toString()
+      compile: (segment) => (parseInt(segment.toString()) + 1).toString()
       
     })).toBe("Olá 2 18!");
   });
   it("Make", () => {
     const extern = "j";
     expect(format("Olá {1} {4}!", {}, {
-      compile: (segment) => (parseInt(segment) + 1).toString(),
+      compile: (segment) => (parseInt(segment.toString()) + 1).toString(),
       make: (resultado) => `${resultado}-${extern}`
     })).toBe("Olá 2-j 5-j!");
   });

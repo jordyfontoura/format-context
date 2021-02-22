@@ -1,4 +1,4 @@
-# Formatador baseado em contexto - format-context
+# Context-based formatter - format-context
 
 ## Installation
 With [npm](https://www.npmjs.com/) do:
@@ -8,105 +8,123 @@ With [npm](https://www.npmjs.com/) do:
 # Dependencies
 There are no other NodeJS libraries that format-context is dependent of
 
+# Usage
+```typescript
+format(message, context, options);
+```
+## message: string
+is the message
 
-## Opções
+
+## context: object | !(null|undefined)
+is the context of the message
+
+
+## options?: object
+options can accept as many parameters as you prefer
+
 
 ### Recursive
 recursive: false
 ```javascript
-format("Olá {nome}!", {nome: "Jack {sobrenome}", sobrenome: "Sparrow"}) -> "Olá Jack {sobrenome}!"
+format("Hello {name}!", {name: "Jack {surname}", surname: "Sparrow"}) -> "Hello Jack {surname}!"
 ```
 recursive: true
 ```javascript
-format("Olá {nome}!", {nome: "Jack {sobrenome}", sobrenome: "Sparrow"}, {recursive: true}) -> "Olá Jack Sparrow!"
+format("Hello {name}!", {name: "Jack {surname}", surname: "Sparrow"}, {recursive: true}) -> "Hello Jack Sparrow!"
 ```
 Warning:
 ```javascript
-format("Olá {nome}!", {nome: "Jack {nome}"}, {recursive: true, maxDepth: 2}) -> "Olá Jack Jack Jack {nome}!"
+format("Hello {name}!", {name: "Jack {name}"}, {recursive: true, maxDepth: 2}) -> "Hello Jack Jack Jack {name}!"
 ```
 maxDepth=Infinity will cause infinity loop
 
 ### Empty
 empty: false
 ```javascript
-format("Olá {}!", ["Jack"], {empty: false}) -> "Olá Jack!"
+format("Hello {}!", ["Jack"], {empty: false}) -> "Hello Jack!"
 ```
 empty: true
 ```javascript
-format("Olá {}!", ["Jack"], {empty: true}) -> "Olá !"
+format("Hello {}!", ["Jack"], {empty: true}) -> "Hello !"
 ```
 
 ### EnableFunctionSegment
 enableFunctionSegment: false
 ```javascript
-let nome = "Jack";
-format("Olá {nome}!", {nome: (context)=>nome}, {enableFunctionSegment: false}) -> "Olá [function]!"
+let name = "Jack";
+format("Hello {name}!", {name: (context)=>name}, {enableFunctionSegment: false}) -> "Hello [function]!"
 ```
 nableFunctionSegment: true
 ```javascript
-let nome = "Jack";
-format("Olá {nome}!", {nome: (context)=>nome}, {enableFunctionSegment: true}) -> "Olá Jack!"
+let name = "Jack";
+format("Hello {name}!", {name: (context)=>name}, {enableFunctionSegment: true}) -> "Hello Jack!"
 ```
 
 ### Process
-Função que é chamada antes da função ```compile```
-Exemplo:
+Function that is call before the function ```compile```
+
+Example:
 ```javascript
-format("Olá {apelido}!", {genero: 'masculino', masculino: {apelido: 'garoto'}, feminino: {apelido: 'garota'}}, {
-  process: (context)=>context.genero === 'masculino'? context.masculino : context.feminino 
-}) -> "Olá garoto!"
+format("Hello {nickname}!", {gender: 'male', male: {nickname: 'garoto'}, female: {nickname: 'garota'}}, {
+  process: (context)=>context.gender === 'male'? context.male : context.female 
+}) -> "Hello garoto!"
 ```
 ### Compile
-Função usada para "compilar" o segmento encontrado.
-Exemplo:
+Function used to compiled the segment 
+
+Example:
 ```javascript
-format("Olá {1} {17}!", {}, {
-  compile: (segment)=>parseInt(segment) + 1
-}) -> "Olá 2 18!"
+format("Hello {1} {17}!", {}, {
+  compile: (segment)=>parseInt(segment.toString()) + 1
+}) -> "Hello 2 18!"
 ```
 ### Make
-Função é chamada após "compilar" o segmento.
-Exemplo:
+Function is called after compile the segment
+
+Example:
 ```javascript
 const extern = "j";
-format("Olá {1} {4}!", {
-  compile: (segment)=>parseInt(segment) + 1,
+format("Hello {1} {4}!", {
+  compile: (segment)=>parseInt(segment.toString()) + 1,
   make: (resultado)=>`${resultado}-${extern}`
-}) -> "Olá 2-j 5-j!"
+}) -> "Hello 2-j 5-j!"
 ```
 ### Cancelers
-Você pode customizar os canceladores (\\ por exemplo) como quiser
-Exemplo:
+You can customize the cancelers as you want
+
+Example:
 ```javascript
-format("Olá anular{nome} {nome}!", {nome: "Jack"}, {
+format("Hello anular{name} {name}!", {name: "Jack"}, {
   cancelers: [
     "anular"
   ]
-}) -> "Olá {nome} Jack!"
+}) -> "Hello {name} Jack!"
 ```
 ### Delimiters
-Você pode customizar os delimitadores como quiser
-Exemplo:
+You can customize the delimiters as you want 
+
+Example:
 ```javascript
-format("Olá ${nome}!", {nome: "Jack"}, {
+format("Hello ${name}!", {name: "Jack"}, {
   delimiters: [
     {start: "${", end: "}"}
   ]
-}) -> "Olá Jack!"
+}) -> "Hello Jack!"
 ```
 
 
-## Outros exemplos:
+## Others examples:
 ``` js
-format("Olá {nome}!", {nome: "Jack"}) -> "Olá Jack!"
-format("Olá {nome}! Você tem {idade} anos!", {nome: "Jack", idade: 22}) -> "Olá Jack! Você tem 22 anos!"
-format("Olá {0}!", ["Jack"]) -> "Olá Jack!"
-format("Olá {0}! Você tem {1} anos!", ["Jack", 22]) -> "Olá Jack! Você tem 22 anos!"
-format("Olá {}! Você tem {} anos!", ["Jack", 22]) -> "Olá Jack! Você tem 22 anos!"
-format("Olá {0}! Você tem {} anos!", ["Jack", 22]) -> "Olá Jack! Você tem Jack anos!"
-format("Olá {}! Você tem {1} anos!", ["Jack", 22]) -> "Olá Jack! Você tem 22 anos!"
+format("Hello {name}!", {name: "Jack"}) -> "Hello Jack!"
+format("Hello {name}! You are {age} years old!", {name: "Jack", age: 22}) -> "Hello Jack! You are 22 years old!"
+format("Hello {0}!", ["Jack"]) -> "Hello Jack!"
+format("Hello {0}! You are {1} years old!", ["Jack", 22]) -> "Hello Jack! You are 22 years old!"
+format("Hello {}! You are {} years old!", ["Jack", 22]) -> "Hello Jack! You are 22 years old!"
+format("Hello {0}! You are {} years old!", ["Jack", 22]) -> "Hello Jack! You are Jack years old!"
+format("Hello {}! You are {1} years old!", ["Jack", 22]) -> "Hello Jack! You are 22 years old!"
 
-format("Olá {nome}! Você tem {} anos!", {0:22, nome: "Jack"}) -> "Olá Jack! Você tem 22 anos!"
-format("Olá {} {}! Você tem {idade} anos!", {...["Jack", "Sparrow"], idade: "Jack"}) -> "Olá Jack Sparrow! Você tem 22 anos!"
+format("Hello {name}! You are {} years old!", {0:22, name: "Jack"}) -> "Hello Jack! You are 22 years old!"
+format("Hello {} {}! You are {age} years old!", {...["Jack", "Sparrow"], age: "Jack"}) -> "Hello Jack Sparrow! You are 22 years old!"
 
 ```
