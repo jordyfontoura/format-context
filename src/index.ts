@@ -84,7 +84,7 @@ export function format<T extends nonvoid>(text: string, context: T, optss?: Form
       if (deep !== undefined) {
         return deep;
       } else {
-        console.warn(`${segment} não foi encontrado no contexto atual`);
+        console.warn(`${segment} not foun in current context.`);
         return segment.toString();
       }
       // return (deep !== undefined) ? deep : segment.toString();

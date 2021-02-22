@@ -66,9 +66,9 @@ Function that is call before the function ```compile```
 
 Example:
 ```javascript
-format("Hello {nickname}!", {gender: 'male', male: {nickname: 'garoto'}, female: {nickname: 'garota'}}, {
+format("Hello {nickname}!", {gender: 'male', male: {nickname: 'boy'}, female: {nickname: 'girl'}}, {
   process: (context)=>context.gender === 'male'? context.male : context.female 
-}) -> "Hello garoto!"
+}) -> "Hello boy!"
 ```
 ### Compile
 Function used to compiled the segment 
@@ -127,4 +127,9 @@ format("Hello {}! You are {1} years old!", ["Jack", 22]) -> "Hello Jack! You are
 format("Hello {name}! You are {} years old!", {0:22, name: "Jack"}) -> "Hello Jack! You are 22 years old!"
 format("Hello {} {}! You are {age} years old!", {...["Jack", "Sparrow"], age: "Jack"}) -> "Hello Jack Sparrow! You are 22 years old!"
 
+
 ```
+```javascript
+format("Hello {user.name}!", {user: {name: "Jack"}}) -> "Hello Jack!"
+```
+***
