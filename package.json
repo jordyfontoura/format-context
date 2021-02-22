@@ -1,6 +1,6 @@
 {
   "name": "format-context",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Text format based on context",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -34,5 +34,9 @@
     "format-context", "formatting", 
     "text", "string"
   ],
-  "displayName": "Context Format"
+  "displayName": "Context Format",
+  "repository": {
+    "url": "https://github.com/jordyfontoura/format-context.git",
+    "type": "git"
+  }
 }
